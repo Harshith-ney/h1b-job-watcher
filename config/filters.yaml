@@ -1,0 +1,107 @@
+# All regexes are case-insensitive Python regex.
+
+roles:
+  include_title:
+    - 'software (engineer|developer|development engineer|dev engineer|engineering)'
+    - '\bsde\b'
+    - '\bswe\b'
+    - '\bsdet\b'
+    - 'back[- ]?end (engineer|developer)'
+    - 'full[- ]?stack'
+    - '(platform|infrastructure|cloud|systems?|systems software|distributed systems) engineer'
+    - '(ai|a\.i\.|artificial intelligence|machine learning|\bml\b|genai|gen ai|generative ai|llm|applied ai|applied ml|research|ai/ml|ml/ai|mlops|ml systems) engineer'
+    - 'engineer,? (ai|ml|machine learning|software)'
+  exclude_title:
+    - '\bsenior\b'
+    - '\bsr\.?\b'
+    - '\bstaff\b'
+    - '\bprincipal\b'
+    - '\blead\b'
+    - '\bmanager\b'
+    - '\bmanagement\b'
+    - '\bdirector\b'
+    - '\barchitect\b'
+    - '\bhead of\b'
+    - '\bvp\b'
+    - '\bvice president\b'
+    - '\bdistinguished\b'
+    - '\bfellow\b'
+    - '\bexpert\b'
+    - '\bintern(ship)?\b'
+    - '\bco-?op\b'
+    - '\bphd\b'
+    - '\bsales\b'
+    - '\b(iii|iv|v)\b'
+    - '\bengineer (3|4|5)\b'
+    - '\bmts\s*(3|4|5)\b'
+    - '\bleader\b'
+    - '\b(smts|lmts|pmts)\b'
+    - '\bhardware\b'
+    - '\bdft\b'
+  # Titles matching these are kept even if an exclude also matches
+  force_include_title:
+    - 'new (college )?grad'
+    - 'university grad'
+    - 'college grad'
+
+experience:
+  # Reject when the smallest "N+ years" requirement found in the description is above this.
+  max_min_years: 2
+  early_career_signals:
+    - '\b2027\b'
+    - 'new grad'
+    - 'new graduate'
+    - 'new college grad'
+    - 'college grad'
+    - '\bamts\b'
+    - 'recent grad'
+    - 'university grad'
+    - 'early[- ]career'
+    - 'entry[- ]level'
+    - '\bcampus\b'
+    - '\b(software engineer|swe|sde|engineer|developer) (i|1)\b'
+    - '\bsoftware dev engineer i\b'
+    - '\b0\s*(-|–|to)\s*[123]\+?\s*years'
+  # true = only notify jobs with an early-career signal. false = anything not obviously senior.
+  require_early_career: false
+  # job with no early-career signal AND no years stated: keep | drop
+  unknown_years: drop
+
+location:
+  us_only: true
+  us_markers:
+    - 'united states'
+    - '\busa?\b'
+    - '\bus[- ]'
+    - '\bremote\b'
+    - ',\s*(AL|AK|AZ|AR|CA|CO|CT|DE|DC|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b'
+    - '(california|washington|texas|new york|massachusetts|virginia|oregon|colorado|georgia|illinois|north carolina|arizona|new jersey|pennsylvania|florida|utah|minnesota|michigan|ohio)'
+    - '(seattle|redmond|bellevue|san francisco|sunnyvale|santa clara|san jose|mountain view|palo alto|menlo park|cupertino|austin|boston|new york|nyc|chicago|atlanta|denver|boulder|portland|hillsboro|folsom|san diego|los angeles|irvine|raleigh|durham|pittsburgh|arlington|herndon|dallas|plano|houston|phoenix|chandler|salt lake|jersey city|columbus|minneapolis)'
+  non_us_markers:
+    - 'india|bengaluru|bangalore|hyderabad|pune|chennai|mumbai|noida|gurgaon|gurugram|delhi'
+    - 'canada|toronto|vancouver|montreal|ottawa|waterloo'
+    - 'united kingdom|\buk\b|london|edinburgh|ireland|dublin'
+    - 'germany|berlin|munich|france|paris|spain|madrid|barcelona|netherlands|amsterdam|poland|warsaw|krakow|romania|bucharest|czech|prague|serbia|belgrade|switzerland|zurich|sweden|stockholm|denmark|finland|italy|portugal|lisbon|austria|vienna|belgium'
+    - 'israel|tel aviv|haifa|yokneam|china|beijing|shanghai|shenzhen|taiwan|taipei|hsinchu|japan|tokyo|korea|seoul|singapore|vietnam|malaysia|penang|philippines|australia|sydney|melbourne|new zealand'
+    - 'palestine|rawabi|egypt|cairo|uae|dubai|abu dhabi|saudi|riyadh|qatar|doha|turkey|istanbul|armenia|yerevan|greece|athens|hungary|budapest|ukraine|kyiv|bulgaria|sofia|croatia|lithuania|vilnius|estonia|tallinn|latvia|norway|oslo|indonesia|jakarta|thailand|bangkok|hong kong|south africa|nigeria|kenya|morocco'
+    - 'mexico|guadalajara|brazil|são paulo|sao paulo|costa rica|argentina|colombia|chile'
+
+sponsorship:
+  red_flags:
+    - 'no (visa )?sponsorship'
+    - 'not (be )?(able to )?(provide|offer) (visa |immigration )?sponsorship'
+    - 'will not (provide |offer )?sponsor'
+    - 'does not (provide |offer )?(visa |immigration )?sponsor'
+    - 'unable to (provide |offer )?sponsor'
+    - 'without (the need for )?(current or future )?(visa |employer )?sponsorship'
+    - 'must not require (visa |immigration )?sponsorship'
+    - 'u\.?s\.? citizens? only'
+    - 'must be a u\.?s\.? citizen'
+    - 'u\.?s\.? citizenship (is )?required'
+    - 'permanent residents? only'
+    - 'security clearance'
+    - '\bitar\b'
+  green_flags:
+    - 'visa sponsorship (is )?(available|offered|provided)'
+    - 'will sponsor'
+    - 'sponsorship (is )?available'

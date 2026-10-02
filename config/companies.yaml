@@ -1,0 +1,136 @@
+settings:
+  bootstrap: digest              # first successful scan of a company: digest | silent
+  max_alerts_per_company: 15     # more new matches than this in one run -> one digest instead of N pings
+  failure_alert_threshold: 3     # consecutive failed scans before a ⚠️ warning
+  drop_restricted: false         # true = skip jobs that mention no-sponsorship/citizens-only
+  request_delay_seconds: 0.75
+
+defaults:
+  max_pages: 10
+  priority: normal
+
+# collector: amazon | apple | workday | eightfold | greenhouse | ashby | lever
+# Run `python main.py probe` after editing. Anything marked VERIFY was written against the
+# site's known public API shape but not live-tested.
+companies:
+  amazon:
+    name: Amazon
+    enabled: true
+    priority: high
+    collector: amazon
+    max_pages: 3                 # sorted by recent; 300 newest per query is plenty every 2h
+    queries: ["software development engineer", "software dev engineer", "machine learning engineer", "new grad"]
+
+  microsoft:                     # VERIFY — Microsoft moved careers to Eightfold in 2025
+    name: Microsoft
+    enabled: true
+    priority: high
+    collector: eightfold
+    host: apply.careers.microsoft.com
+    domain: microsoft.com
+    search_path: /api/pcsx/search
+    search_path: /api/pcsx/search
+    max_pages: 5
+    queries: ["software engineer", "machine learning engineer", "new graduate"]
+
+  nvidia:
+    name: NVIDIA
+    enabled: true
+    priority: high
+    collector: workday
+    host: nvidia.wd5.myworkdayjobs.com
+    tenant: nvidia
+    site: NVIDIAExternalCareerSite
+    queries: ["software engineer", "new college grad", "deep learning engineer", "AI engineer"]
+
+  apple:                         # VERIFY
+    name: Apple
+    enabled: false
+    priority: high
+    collector: apple
+    max_pages: 5
+    queries: ["software engineer", "machine learning engineer"]
+
+  salesforce:
+    name: Salesforce
+    enabled: true
+    collector: workday
+    host: salesforce.wd12.myworkdayjobs.com
+    tenant: salesforce
+    site: External_Career_Site
+    queries: ["software engineer", "AMTS", "machine learning engineer"]
+
+  intel:
+    name: Intel
+    enabled: true
+    collector: workday
+    host: intel.wd1.myworkdayjobs.com
+    tenant: intel
+    site: External
+    queries: ["software engineer", "AI engineer", "college graduate"]
+
+  adobe:                         # VERIFY site name
+    name: Adobe
+    enabled: true
+    collector: workday
+    host: adobe.wd5.myworkdayjobs.com
+    tenant: adobe
+    site: external_experienced
+    queries: ["software engineer", "machine learning engineer", "university"]
+
+  paypal:                        # VERIFY
+    name: PayPal
+    enabled: true
+    collector: workday
+    host: paypal.wd1.myworkdayjobs.com
+    tenant: paypal
+    site: jobs
+    queries: ["software engineer", "machine learning engineer"]
+
+  doordash:
+    name: DoorDash
+    enabled: true
+    collector: greenhouse
+    board: doordashusa
+
+  qualcomm:                      # VERIFY — Eightfold
+    name: Qualcomm
+    enabled: false
+    collector: eightfold
+    host: careers.qualcomm.com
+    domain: qualcomm.com
+    queries: ["software engineer", "machine learning engineer"]
+
+  snowflake:                     # VERIFY — guess: Ashby board
+    name: Snowflake
+    enabled: true
+    collector: ashby
+    board: snowflake
+
+  amd:                           # VERIFY — guess: Workday
+    name: AMD
+    enabled: false
+    collector: workday
+    host: amd.wd1.myworkdayjobs.com
+    tenant: amd
+    site: External
+    queries: ["software engineer", "AI engineer", "new college grad"]
+
+  cisco:                         # VERIFY — guess: Workday
+    name: Cisco
+    enabled: true
+    collector: workday
+    host: cisco.wd5.myworkdayjobs.com
+    tenant: cisco
+    site: Cisco_Careers
+    queries: ["software engineer", "machine learning engineer"]
+
+  # ---- need a dedicated collector (Phase 3) ----
+  google:        {name: Google,         enabled: false, collector: null}   # careers.google.com, no public JSON
+  meta:          {name: Meta,           enabled: false, collector: null}   # GraphQL
+  uber:          {name: Uber,           enabled: false, collector: null}   # uber.com/api/loadSearchJobsResults
+  jpmorgan:      {name: JPMorgan Chase, enabled: false, collector: null}   # Oracle HCM REST
+  goldman:       {name: Goldman Sachs,  enabled: false, collector: null}   # higher.gs.com
+  bloomberg:     {name: Bloomberg,      enabled: false, collector: null}   # Avature
+  ibm:           {name: IBM,            enabled: false, collector: null}
+  linkedin:      {name: LinkedIn,       enabled: false, collector: null}
