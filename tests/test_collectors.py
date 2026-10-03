@@ -64,3 +64,35 @@ def test_amazon():
     jobs = build(cfg, FakeHTTP({"amazon.jobs": load("amazon.json")})).fetch()
     assert jobs[0].url == "https://www.amazon.jobs/en/jobs/2900001/software-dev-engineer-i"
     assert "Bachelor" in jobs[0].description
+
+
+def test_apple_sends_format_and_parses():
+    sent = []
+
+    class H(FakeHTTP):
+        def post(self, url, json=None, **kw):
+            sent.append(json)
+            return Resp({"res": {"totalRecords": 1, "searchResults": [{
+                "positionId": "200663858", "postingTitle": "Software Engineer, Maps",
+                "transformedPostingTitle": "software-engineer-maps", "postingDate": "2026-10-03T00:30:53.671Z",
+                "jobSummary": "Build maps.", "locations": [{"name": "Cupertino", "stateProvince": "California",
+                                                            "countryID": "iso-country-USA", "countryName": "United States of America"}]},
+                {"positionId": "200663858", "postingTitle": "Software Engineer, Maps",
+                 "transformedPostingTitle": "software-engineer-maps", "postingDate": "2026-10-03T00:30:53.671Z",
+                 "locations": [{"name": "Seattle", "stateProvince": "Washington", "countryID": "iso-country-USA"}]}]}})
+
+        def get(self, url, **kw):
+            r = Resp({}); r.text = open(Path(__file__).parent / "fixtures" / "apple_details.html").read(); return r
+
+    cfg = {"key": "apple", "name": "Apple", "collector": "apple", "queries": [""], "max_pages": 3, "teams": ["AF", "MCHLN"]}
+    c = build(cfg, H({}))
+    jobs = c.fetch()
+    assert sent[0]["format"] and sent[0]["sort"] == "newest" and len(sent) == 1
+    assert sent[0]["filters"]["teams"][1] == {"team": "teamsAndSubTeams-SFTWR", "subTeam": "subTeam-MCHLN"}
+    assert len(jobs) == 1  # duplicate city rows merged
+    j = jobs[0]
+    assert j.url == "https://jobs.apple.com/en-us/details/200663858/software-engineer-maps"
+    assert j.location == "Cupertino, California, USA; Seattle, Washington, USA" and j.posted_at == "2026-10-03"
+    d = c.enrich(j).description
+    assert d.startswith("Bachelor's degree in CS\n5+ years") and "Minimum Qualifications" not in d
+    assert "Build maps." in d

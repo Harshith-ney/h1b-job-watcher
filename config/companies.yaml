@@ -19,7 +19,7 @@ companies:
     priority: high
     collector: amazon
     max_pages: 3                 # sorted by recent; 300 newest per query is plenty every 2h
-    queries: ["software development engineer", "software dev engineer", "machine learning engineer", "new grad"]
+    queries: ["software development engineer", "software dev engineer", "machine learning engineer", "new grad", "AI engineer"]
 
   microsoft:                     # VERIFY — Microsoft moved careers to Eightfold in 2025
     name: Microsoft
@@ -31,7 +31,7 @@ companies:
     search_path: /api/pcsx/search
     search_path: /api/pcsx/search
     max_pages: 5
-    queries: ["software engineer", "machine learning engineer", "new graduate"]
+    queries: ["software engineer", "machine learning engineer", "new graduate", "AI engineer"]
 
   nvidia:
     name: NVIDIA
@@ -43,13 +43,16 @@ companies:
     site: NVIDIAExternalCareerSite
     queries: ["software engineer", "new college grad", "deep learning engineer", "AI engineer"]
 
-  apple:                         # VERIFY
+  apple:
     name: Apple
-    enabled: false
+    enabled: true
     priority: high
     collector: apple
-    max_pages: 5
-    queries: ["software engineer", "machine learning engineer"]
+    max_pages: 3                 # sorted newest: 60 newest each run
+    queries: [""]                # no keyword: team filter defines scope
+    teams: [AF, CLD, DSR, ISTECH, MCHLN, COS, SC, TS, UEE]   # Software and Services sub-teams
+    experience:
+      unknown_years: keep        # Apple often omits years for junior roles; stated years still capped
 
   salesforce:
     name: Salesforce
@@ -58,7 +61,7 @@ companies:
     host: salesforce.wd12.myworkdayjobs.com
     tenant: salesforce
     site: External_Career_Site
-    queries: ["software engineer", "AMTS", "machine learning engineer"]
+    queries: ["software engineer", "AMTS", "machine learning engineer", "AI engineer"]
 
   intel:
     name: Intel
@@ -76,7 +79,7 @@ companies:
     host: adobe.wd5.myworkdayjobs.com
     tenant: adobe
     site: external_experienced
-    queries: ["software engineer", "machine learning engineer", "university"]
+    queries: ["software engineer", "machine learning engineer", "university", "AI engineer"]
 
   paypal:                        # VERIFY
     name: PayPal
@@ -85,7 +88,7 @@ companies:
     host: paypal.wd1.myworkdayjobs.com
     tenant: paypal
     site: jobs
-    queries: ["software engineer", "machine learning engineer"]
+    queries: ["software engineer", "machine learning engineer", "AI engineer"]
 
   doordash:
     name: DoorDash
@@ -102,7 +105,7 @@ companies:
     search_path: /api/pcsx/search
     page_delay: 2
     max_pages: 3
-    queries: ["software engineer", "machine learning engineer"]
+    queries: ["software engineer", "machine learning engineer", "AI engineer"]
 
   snowflake:                     # VERIFY — guess: Ashby board
     name: Snowflake
@@ -126,7 +129,7 @@ companies:
     host: cisco.wd5.myworkdayjobs.com
     tenant: cisco
     site: Cisco_Careers
-    queries: ["software engineer", "machine learning engineer"]
+    queries: ["software engineer", "machine learning engineer", "AI engineer"]
 
   # ---- need a dedicated collector (Phase 3) ----
   google:
@@ -138,7 +141,7 @@ companies:
     target_levels: [EARLY, MID]
     max_pages: 2                 # sorted by date: newest 40 per query each run
     bootstrap_pages: 15          # first scan reads everything once
-    queries: ["software engineer", "machine learning engineer"]
+    queries: ["software engineer", "machine learning engineer", "AI engineer"]
     exclude_companies: ["Waymo"]
     skip_exclude_title: ['\b(iii|iv|v)\b']   # Google SWE III = ~2 yrs (L4); still filtered by years
     extra_exclude_title: ['\b(iv|v)\b']

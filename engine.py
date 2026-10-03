@@ -29,7 +29,8 @@ def process_company(cfg: dict, collector, store, notifier, filters: dict, settin
     skip, extra = cfg.get("skip_exclude_title") or [], cfg.get("extra_exclude_title") or []
     if skip or extra:
         roles_cfg["exclude_title"] = [p for p in roles_cfg.get("exclude_title", []) if p not in skip] + list(extra)
-    exp_cfg, sp_cfg = filters.get("experience", {}), filters.get("sponsorship", {})
+    exp_cfg = {**filters.get("experience", {}), **(cfg.get("experience") or {})}  # per-company overrides
+    sp_cfg = filters.get("sponsorship", {})
     first_scan = store.is_first_scan(key)
     collector.first_scan = first_scan  # collectors may read deeper on first scan
 

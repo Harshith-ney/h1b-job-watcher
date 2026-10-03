@@ -11,6 +11,9 @@ roles:
     - '(platform|infrastructure|cloud|systems software|software systems|distributed systems) engineer'
     - '(ai|a\.i\.|artificial intelligence|machine learning|\bml\b|genai|gen ai|generative ai|llm|applied ai|applied ml|research|ai/ml|ml/ai|mlops|ml systems) engineer'
     - 'engineer,? (ai|ml|machine learning|software)'
+    - '(deep learning|computer vision|nlp|speech|voice ai|conversational ai|inference|agentic ai|ai platform|ai infrastructure|ai agent|ai agents) engineer'
+    - '(ai|machine learning|ml|genai|llm) (developer|software developer)'
+    - 'forward[- ]deployed (software )?engineer'
   exclude_title:
     - '\bsenior\b'
     - '\bsr\.?\b'
