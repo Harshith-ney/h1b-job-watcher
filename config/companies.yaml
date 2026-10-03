@@ -129,7 +129,20 @@ companies:
     queries: ["software engineer", "machine learning engineer"]
 
   # ---- need a dedicated collector (Phase 3) ----
-  google:        {name: Google,         enabled: false, collector: null}   # careers.google.com, no public JSON
+  google:
+    name: Google
+    enabled: true
+    priority: high
+    collector: google
+    location: United States
+    target_levels: [EARLY, MID]
+    max_pages: 2                 # sorted by date: newest 40 per query each run
+    bootstrap_pages: 15          # first scan reads everything once
+    queries: ["software engineer", "machine learning engineer"]
+    exclude_companies: ["Waymo"]
+    skip_exclude_title: ['\b(iii|iv|v)\b']   # Google SWE III = ~2 yrs (L4); still filtered by years
+    extra_exclude_title: ['\b(iv|v)\b']
+
   meta:          {name: Meta,           enabled: false, collector: null}   # GraphQL
   uber:          {name: Uber,           enabled: false, collector: null}   # uber.com/api/loadSearchJobsResults
   jpmorgan:      {name: JPMorgan Chase, enabled: false, collector: null}   # Oracle HCM REST

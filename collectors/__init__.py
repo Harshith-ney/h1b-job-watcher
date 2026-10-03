@@ -2,6 +2,7 @@ from collectors.amazon import AmazonCollector
 from collectors.apple import AppleCollector
 from collectors.ashby import AshbyCollector
 from collectors.eightfold import EightfoldCollector
+from collectors.google import GoogleCollector
 from collectors.greenhouse import GreenhouseCollector
 from collectors.lever import LeverCollector
 from collectors.workday import WorkdayCollector
@@ -11,6 +12,7 @@ REGISTRY = {
     "apple": AppleCollector,
     "ashby": AshbyCollector,
     "eightfold": EightfoldCollector,
+    "google": GoogleCollector,
     "greenhouse": GreenhouseCollector,
     "lever": LeverCollector,
     "workday": WorkdayCollector,

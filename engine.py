@@ -24,9 +24,14 @@ class Result:
 
 def process_company(cfg: dict, collector, store, notifier, filters: dict, settings: dict) -> Result:
     key, res = cfg["key"], Result()
-    roles_cfg, loc_cfg = filters.get("roles", {}), filters.get("location", {})
+    roles_cfg, loc_cfg = dict(filters.get("roles", {})), filters.get("location", {})
+    # per-company title tweaks, e.g. Google "Software Engineer III" is a 2-year role
+    skip, extra = cfg.get("skip_exclude_title") or [], cfg.get("extra_exclude_title") or []
+    if skip or extra:
+        roles_cfg["exclude_title"] = [p for p in roles_cfg.get("exclude_title", []) if p not in skip] + list(extra)
     exp_cfg, sp_cfg = filters.get("experience", {}), filters.get("sponsorship", {})
     first_scan = store.is_first_scan(key)
+    collector.first_scan = first_scan  # collectors may read deeper on first scan
 
     summaries = collector.fetch()
     res.found = len(summaries)
