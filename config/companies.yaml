@@ -105,7 +105,7 @@ companies:
     search_path: /api/pcsx/search
     page_delay: 2
     max_pages: 3
-    queries: ["software engineer", "machine learning engineer", "AI engineer", "full stack", "backend"]
+    queries: ["software engineer", "machine learning engineer", "AI engineer", "full stack", "backend", "college graduate"]
 
   snowflake:                     # VERIFY — guess: Ashby board
     name: Snowflake
