@@ -5,6 +5,7 @@ from collectors.eightfold import EightfoldCollector
 from collectors.google import GoogleCollector
 from collectors.greenhouse import GreenhouseCollector
 from collectors.lever import LeverCollector
+from collectors.oracle import OracleCollector
 from collectors.workday import WorkdayCollector
 
 REGISTRY = {
@@ -15,6 +16,7 @@ REGISTRY = {
     "google": GoogleCollector,
     "greenhouse": GreenhouseCollector,
     "lever": LeverCollector,
+    "oracle": OracleCollector,
     "workday": WorkdayCollector,
 }
 

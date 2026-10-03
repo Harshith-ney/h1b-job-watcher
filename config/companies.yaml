@@ -147,8 +147,25 @@ companies:
     extra_exclude_title: ['\b(iv|v)\b']
 
   meta:          {name: Meta,           enabled: false, collector: null}   # GraphQL
-  uber:          {name: Uber,           enabled: false, collector: null}   # uber.com/api/loadSearchJobsResults
-  jpmorgan:      {name: JPMorgan Chase, enabled: false, collector: null}   # Oracle HCM REST
+  uber:
+    name: Uber
+    enabled: true
+    collector: oracle
+    host: iaziqy.fa.ocs.oraclecloud.com
+    site: UberCareers
+    job_url: "https://jobs.uber.com/en/jobs/{id}/"
+    max_pages: 2                 # sorted newest: 50 newest per query each run
+    queries: ["software engineer", "machine learning engineer", "AI engineer"]
+
+  jpmorgan:
+    name: JPMorgan Chase
+    enabled: true
+    collector: oracle
+    host: jpmc.fa.oraclecloud.com
+    site: CX_1001
+    max_pages: 4                 # sorted newest: 50 newest per query each run
+    queries: ["software engineer", "machine learning engineer", "AI engineer"]
+
   goldman:       {name: Goldman Sachs,  enabled: false, collector: null}   # higher.gs.com
   bloomberg:     {name: Bloomberg,      enabled: false, collector: null}   # Avature
   ibm:           {name: IBM,            enabled: false, collector: null}
