@@ -1,5 +1,5 @@
 settings:
-  bootstrap: digest              # first successful scan of a company: digest | silent
+  bootstrap: silent              # first successful scan of a company: digest | silent
   max_alerts_per_company: 15     # more new matches than this in one run -> one digest instead of N pings
   failure_alert_threshold: 3     # consecutive failed scans before a ⚠️ warning
   drop_restricted: false         # true = skip jobs that mention no-sponsorship/citizens-only
