@@ -95,10 +95,13 @@ companies:
 
   qualcomm:                      # VERIFY — Eightfold
     name: Qualcomm
-    enabled: false
+    enabled: true
     collector: eightfold
     host: careers.qualcomm.com
     domain: qualcomm.com
+    search_path: /api/pcsx/search
+    page_delay: 2
+    max_pages: 3
     queries: ["software engineer", "machine learning engineer"]
 
   snowflake:                     # VERIFY — guess: Ashby board

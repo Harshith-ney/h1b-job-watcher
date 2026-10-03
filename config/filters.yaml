@@ -8,7 +8,7 @@ roles:
     - '\bsdet\b'
     - 'back[- ]?end (engineer|developer)'
     - 'full[- ]?stack'
-    - '(platform|infrastructure|cloud|systems?|systems software|distributed systems) engineer'
+    - '(platform|infrastructure|cloud|systems software|software systems|distributed systems) engineer'
     - '(ai|a\.i\.|artificial intelligence|machine learning|\bml\b|genai|gen ai|generative ai|llm|applied ai|applied ml|research|ai/ml|ml/ai|mlops|ml systems) engineer'
     - 'engineer,? (ai|ml|machine learning|software)'
   exclude_title:
