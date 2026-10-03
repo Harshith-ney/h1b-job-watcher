@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write            # to commit state/jobs.db back
+  contents: write            # to force-push the state branch
 
 jobs:
   watch:
@@ -28,16 +28,33 @@ jobs:
 
       - run: python -m pytest -q
 
+      - name: Restore state
+        run: |
+          mkdir -p state
+          if git fetch --depth=1 origin state; then
+            git show FETCH_HEAD:jobs.db > state/jobs.db
+            echo "restored $(du -h state/jobs.db | cut -f1)"
+          else
+            echo "no state branch yet - starting fresh"
+          fi
+
       - name: Scan
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
         run: python main.py run
 
-      - name: Persist state
+      - name: Persist state (single-commit orphan branch, no history growth)
         if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          [ -f state/jobs.db ] || exit 0
+          rm -rf /tmp/sb && mkdir /tmp/sb && cp state/jobs.db /tmp/sb/
+          cd /tmp/sb
+          git init -q -b state
           git config user.name  "job-watcher-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/jobs.db
-          git diff --cached --quiet || (git commit -m "state: scan $(date -u +%FT%TZ) [skip ci]" && git pull --rebase && git push)
+          git add jobs.db
+          git commit -qm "state $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" state
