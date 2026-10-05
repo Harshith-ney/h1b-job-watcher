@@ -50,7 +50,7 @@ roles:
 
 experience:
   # Reject when the smallest "N+ years" requirement found in the description is above this.
-  max_min_years: 3
+  max_min_years: 4
   early_career_signals:
     - '\b2027\b'
     - 'new grad'
@@ -69,7 +69,7 @@ experience:
   # true = only notify jobs with an early-career signal. false = anything not obviously senior.
   require_early_career: false
   # job with no early-career signal AND no years stated: keep | drop
-  unknown_years: drop
+  unknown_years: keep
 
 location:
   us_only: true
