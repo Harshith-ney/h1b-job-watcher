@@ -42,6 +42,7 @@ roles:
     - '\bhardware\b'
     - '\bdft\b'
     - 'clearance|\bctj\b|\bpoly\b|ts/sci|\bsecret\b'
+    - '\badc2?s?\b|government|govcloud|cross domain|public sector|ts/sci'
   # Titles matching these are kept even if an exclude also matches
   force_include_title:
     - 'new (college )?grad'
