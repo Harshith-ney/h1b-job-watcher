@@ -50,7 +50,7 @@ roles:
 
 experience:
   # Reject when the smallest "N+ years" requirement found in the description is above this.
-  max_min_years: 2
+  max_min_years: 3
   early_career_signals:
     - '\b2027\b'
     - 'new grad'
