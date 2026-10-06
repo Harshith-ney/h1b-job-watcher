@@ -153,7 +153,6 @@ companies:
     collector: oracle
     host: iaziqy.fa.ocs.oraclecloud.com
     site: UberCareers
-    job_url: "https://jobs.uber.com/en/jobs/{id}/"
     max_pages: 2                 # sorted newest: 50 newest per query each run
     queries: ["software engineer", "machine learning engineer", "AI engineer"]
 
