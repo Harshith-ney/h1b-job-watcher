@@ -29,6 +29,30 @@ def html_to_text(raw: str | None) -> str:
     return re.sub(r"\n\s*\n+", "\n", text).strip()
 
 
+_UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+_WORKDAY_ID = re.compile(r"_([A-Za-z]{0,3}\d[\w-]*)$")
+
+
+def job_id_from_url(url: str) -> str | None:
+    """Stable job ID from an official job URL (Workday req id, numeric id, or UUID).
+    Lets dedupe survive title/location edits."""
+    parts = urlsplit(url)
+    q = dict(parse_qsl(parts.query))
+    for k in ("gh_jid", "jobId", "job_id"):
+        if q.get(k):
+            return q[k]
+    for seg in reversed([x for x in parts.path.split("/") if x]):
+        m = _WORKDAY_ID.search(seg)
+        if m:
+            return m.group(1)
+        m = re.match(r"^(\d{4,})", seg)
+        if m:
+            return m.group(1)
+        if _UUID.match(seg):
+            return seg.lower()
+    return None
+
+
 @dataclass
 class Job:
     company: str
@@ -47,3 +71,8 @@ class Job:
             for s in (self.company, self.title, self.location, normalize_url(self.url))
         )
         return hashlib.sha256(key.encode()).hexdigest()
+
+    @property
+    def job_key(self) -> str | None:
+        jid = job_id_from_url(self.url)
+        return f"{self.company.strip().lower()}|{jid}" if jid else None

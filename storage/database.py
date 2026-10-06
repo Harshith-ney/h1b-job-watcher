@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from models import Job
+from models import Job, job_id_from_url
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
@@ -50,23 +50,39 @@ class Store:
         self.db = sqlite3.connect(str(path))
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        cols = {r[1] for r in self.db.execute("PRAGMA table_info(jobs)")}
+        if "job_key" not in cols:
+            self.db.execute("ALTER TABLE jobs ADD COLUMN job_key TEXT")
+        self.db.execute("CREATE INDEX IF NOT EXISTS idx_jobs_key ON jobs(job_key)")
+        rows = self.db.execute("SELECT fingerprint, company, official_url FROM jobs WHERE job_key IS NULL").fetchall()
+        for fp, company, url in rows:
+            jid = job_id_from_url(url or "")
+            if jid:
+                self.db.execute("UPDATE jobs SET job_key=? WHERE fingerprint=?", (f"{company.strip().lower()}|{jid}", fp))
+        self.db.commit()
 
     # ---- jobs -------------------------------------------------------------
-    def is_settled(self, fp: str) -> bool:
-        """Seen and finished (pending notifications get retried)."""
-        row = self.db.execute("SELECT status FROM jobs WHERE fingerprint=?", (fp,)).fetchone()
-        return bool(row) and row["status"] != "pending"
+    def is_settled(self, fp: str, key: str | None = None) -> bool:
+        """Seen and finished (pending notifications get retried). Matches by fingerprint OR stable job key."""
+        rows = self.db.execute("SELECT status FROM jobs WHERE fingerprint=? OR (job_key IS NOT NULL AND job_key=?)",
+                               (fp, key or "")).fetchall()
+        return any(r["status"] != "pending" for r in rows)
 
     def save(self, key: str, job: Job, status: str, reason: str = "",
-             early: bool = False, sponsorship: str | None = None, fp: str | None = None) -> None:
+             early: bool = False, sponsorship: str | None = None, fp: str | None = None,
+             job_key: str | None = None) -> None:
         self.db.execute(
             """INSERT INTO jobs (fingerprint, company_key, company, title, location, official_url, posted_at,
-                                 description, status, reason, early_career, sponsorship, first_seen, notified)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                                 description, status, reason, early_career, sponsorship, first_seen, notified, job_key)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(fingerprint) DO UPDATE SET status=excluded.status, notified=excluded.notified,
                  reason=excluded.reason""",
             (fp or job.fingerprint, key, job.company, job.title, job.location, job.url, job.posted_at,
-             job.description, status, reason, int(early), sponsorship, now(), int(status == "notified")),
+             job.description, status, reason, int(early), sponsorship, now(), int(status == "notified"),
+             job_key or job.job_key),
         )
         self.db.commit()
 

@@ -47,7 +47,7 @@ def process_company(cfg: dict, collector, store, notifier, filters: dict, settin
         if not title_verdict(job.title, roles_cfg)[0]:
             continue
         fp = job.fingerprint  # computed from the summary so it's stable across runs
-        if store.is_settled(fp):
+        if store.is_settled(fp, job.job_key):  # job_key = company + stable job id from URL
             continue
         candidates.append((fp, job))
     res.candidates = len(candidates)
