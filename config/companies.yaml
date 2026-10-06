@@ -113,14 +113,14 @@ companies:
     collector: ashby
     board: snowflake
 
-  amd:                           # VERIFY — guess: Workday
+  amd:
     name: AMD
-    enabled: false
-    collector: workday
-    host: amd.wd1.myworkdayjobs.com
-    tenant: amd
-    site: External
-    queries: ["software engineer", "AI engineer", "new college grad"]
+    enabled: true
+    collector: jibe
+    host: careers.amd.com
+    filters: {country: "United States", categories: "Engineering"}
+    max_pages: 5                 # 10 per page, newest first: 50 newest per query each run
+    queries: ["software", "machine learning", "AI engineer"]
 
   cisco:                         # VERIFY — guess: Workday
     name: Cisco
