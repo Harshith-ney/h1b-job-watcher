@@ -166,7 +166,17 @@ companies:
     max_pages: 4                 # sorted newest: 50 newest per query each run
     queries: ["software engineer", "machine learning engineer", "AI engineer"]
 
-  goldman:       {name: Goldman Sachs,  enabled: false, collector: null}   # higher.gs.com
+  goldman:
+    name: Goldman Sachs
+    enabled: true
+    collector: goldman
+    experience_levels: [Analyst, Associate]
+    job_functions: [Software Engineering]
+    page_size: 50
+    max_pages: 10                # global results; US filter applied locally
+    experience:
+      unknown_years: keep        # no descriptions in search; levels already bound experience
+
   bloomberg:     {name: Bloomberg,      enabled: false, collector: null}   # Avature
   ibm:           {name: IBM,            enabled: false, collector: null}
   linkedin:      {name: LinkedIn,       enabled: false, collector: null}
