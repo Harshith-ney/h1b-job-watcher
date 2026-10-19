@@ -106,8 +106,8 @@ sponsorship:
     - 'permanent residents? only'
     - 'security clearance'
     - '\bitar\b'
-    - 'not be able to (employ|hire)[^.]{0,160}(visa|h-?1b|sponsor)'
-    - '(not|unable to|cannot|can.t)[^.]{0,80}support[^.]{0,40}(h-?1b|visa|immigration)?[^.]{0,10}sponsorship'
+    - 'not be able to (employ|hire)(?:u\.s\.|[^.]){0,200}(visa|h-?1b|sponsor)'
+    - '(not|unable to|cannot|can.t)(?:u\.s\.|[^.]){0,120}support(?:u\.s\.|[^.]){0,40}sponsorship'
     - 'not (be )?(eligible|able) [^.]{0,40}(opt|cpt|f-?1)'
   green_flags:
     - 'visa sponsorship (is )?(available|offered|provided)'
