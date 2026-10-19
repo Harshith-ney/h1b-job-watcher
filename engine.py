@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 
 from filters.experience import experience_verdict
@@ -109,18 +110,41 @@ def process_company(cfg: dict, collector, store, notifier, filters: dict, settin
     return res
 
 
+def describe_error(e: Exception) -> str:
+    """Plain-English reason for a collector failure (raw error still goes to the run log)."""
+    name, text = type(e).__name__, str(e)
+    if name == "JSONDecodeError" or "Expecting value" in text:
+        return "site returned HTML instead of JSON (likely maintenance or an outage)"
+    if "429" in text:
+        return "rate-limited by the site (HTTP 429)"
+    if "403" in text:
+        return "blocked by the site (HTTP 403)"
+    if "404" in text:
+        return "endpoint not found (HTTP 404), the site's API may have changed"
+    if re.search(r"\b5\d\d\b", text):
+        return "site server error (HTTP 5xx)"
+    if "timed out" in text.lower() or name in ("ConnectionError", "Timeout", "ReadTimeout", "ConnectTimeout"):
+        return "network error or timeout"
+    return f"{name}: {text[:200]}"
+
+
+_PLATFORMS = {"workday": "Workday", "eightfold": "Eightfold", "oracle": "Oracle Recruiting",
+              "jibe": "Jibe", "greenhouse": "Greenhouse", "ashby": "Ashby", "lever": "Lever"}
+
+
 def run_all(companies: dict, build_collector, store, notifier, filters: dict, settings: dict) -> dict:
     threshold = int(settings.get("failure_alert_threshold", 3))
-    summary = {}
+    summary, to_warn, recovered = {}, [], []
     for key, cfg in companies.items():
         try:
             collector = build_collector(cfg)
             res = process_company(cfg, collector, store, notifier, filters, settings)
         except Exception as e:  # one broken collector never stops the others
             log.exception("%s: collector failed", key)
-            h = store.record_failure(key, f"{type(e).__name__}: {e}")
+            h = store.record_failure(key, describe_error(e))
             summary[key] = f"FAILED ({h['consecutive_failures']}x): {e}"
-            _maybe_warn(cfg, h, store, notifier, threshold)
+            if h["consecutive_failures"] >= threshold and not h.get("warned"):
+                to_warn.append((cfg, h))
             continue
 
         prev = store.health(key)
@@ -128,24 +152,40 @@ def run_all(companies: dict, build_collector, store, notifier, filters: dict, se
             # Returning nothing when we used to get results usually means the site changed.
             h = store.record_failure(key, f"returned 0 jobs (previously {prev['jobs_found']})")
             summary[key] = "SUSPICIOUS: 0 jobs"
-            _maybe_warn(cfg, h, store, notifier, threshold)
+            if h["consecutive_failures"] >= threshold and not h.get("warned"):
+                to_warn.append((cfg, h))
             continue
 
         prev = store.record_success(key, res.found, len(res.matched))
         if prev.get("warned"):
-            notifier.send(f"✅ COLLECTOR RECOVERED\n\n{cfg['name']} collector is working again.")
+            recovered.append(cfg["name"])
         summary[key] = (f"found={res.found} candidates={res.candidates} matched={len(res.matched)} "
                         f"rejected={res.rejected} alerts={res.alerts_sent}")
         log.info("%s: %s", key, summary[key])
+
+    _send_health(to_warn, recovered, store, notifier)
     return summary
 
 
-def _maybe_warn(cfg, health, store, notifier, threshold):
-    if health["consecutive_failures"] >= threshold and not health.get("warned"):
-        last_ok = health.get("last_successful_scan") or "never"
-        notifier.send(
-            f"⚠️ COLLECTOR WARNING\n\n{cfg['name']} collector may be failing.\n"
-            f"Failed {health['consecutive_failures']} scans in a row.\n"
-            f"Last successful scan: {last_ok} UTC\nError: {(health.get('last_error') or '')[:300]}"
-        )
-        store.set_warned(cfg["key"])
+def _send_health(to_warn, recovered, store, notifier):
+    """One grouped warning + one grouped recovery message per run, instead of one per company."""
+    if to_warn:
+        groups: dict[tuple[str, str], list] = {}
+        for cfg, h in to_warn:
+            platform = _PLATFORMS.get(cfg.get("collector", ""), "Custom")
+            groups.setdefault((platform, h.get("last_error") or "unknown error"), []).append((cfg, h))
+        n = len(to_warn)
+        lines = [f"⚠️ COLLECTOR WARNING: {n} collector{'s' if n > 1 else ''} failing\n"]
+        for (platform, reason), items in groups.items():
+            names = ", ".join(c["name"] for c, _ in items)
+            runs = max(h["consecutive_failures"] for _, h in items)
+            last_ok = min((h.get("last_successful_scan") or "never") for _, h in items)
+            lines.append(f"• {platform}: {names}\n  {reason}\n  failing {runs} runs · last OK {last_ok} UTC")
+        if len(to_warn) > 1 and len(groups) == 1:
+            lines.append("\nSame platform, same error: usually a temporary outage on their side.")
+        if notifier.send("\n".join(lines)):
+            for cfg, _ in to_warn:
+                store.set_warned(cfg["key"])
+    if recovered:
+        notifier.send(f"✅ COLLECTOR RECOVERED\n\n{', '.join(recovered)} "
+                      f"{'is' if len(recovered) == 1 else 'are'} working again.")

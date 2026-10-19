@@ -58,6 +58,8 @@ companies:
     name: Salesforce
     enabled: true
     collector: workday
+    page_delay: 3                # Workday 429s on rapid requests
+    max_pages: 5
     host: salesforce.wd12.myworkdayjobs.com
     tenant: salesforce
     site: External_Career_Site

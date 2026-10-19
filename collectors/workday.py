@@ -2,6 +2,8 @@
 Config: host, tenant, site, optional applied_facets."""
 from __future__ import annotations
 
+import time
+
 from collectors.base import Collector, log
 from models import Job, html_to_text
 
@@ -25,6 +27,7 @@ class WorkdayCollector(Collector):
                     "offset": page * PAGE,
                     "searchText": q,
                 }
+                time.sleep(float(self.cfg.get("page_delay", 0)))
                 data = self.http.post(f"{self.base}/jobs", json=body).json()
                 if total is None:
                     total = data.get("total") or 0  # only reliable on first page
@@ -47,6 +50,7 @@ class WorkdayCollector(Collector):
         return self.dedupe(jobs)
 
     def enrich(self, job: Job) -> Job:
+        time.sleep(float(self.cfg.get("page_delay", 0)))
         data = self.http.get(f"{self.base}{job.external_id}").json()
         info = data.get("jobPostingInfo") or {}
         job.description = html_to_text(info.get("jobDescription"))
