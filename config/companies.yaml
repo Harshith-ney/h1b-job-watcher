@@ -181,3 +181,27 @@ companies:
   bloomberg:     {name: Bloomberg,      enabled: false, collector: null}   # Avature
   ibm:           {name: IBM,            enabled: false, collector: null}
   linkedin:      {name: LinkedIn,       enabled: false, collector: null}
+
+  whoop:
+    name: WHOOP
+    enabled: true
+    collector: ashby
+    board: whoop
+
+  roblox:
+    name: Roblox
+    enabled: true
+    collector: greenhouse
+    board: roblox
+
+  fidelity:
+    name: Fidelity Investments
+    enabled: true
+    collector: workday
+    host: fmr.wd1.myworkdayjobs.com
+    tenant: fmr
+    site: FidelityCareers
+    page_delay: 2                # be gentle with Workday (avoid 429s)
+    max_pages: 8
+    queries: ["software engineer", "full stack engineer", "machine learning engineer", "AI engineer"]
+    skip_exclude_title: ['\bsenior\b', '\bsr\.?\b']   # Fidelity "Senior SWE" is mid-level; years filter still caps at 4
