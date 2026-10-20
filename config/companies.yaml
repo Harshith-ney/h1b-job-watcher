@@ -205,3 +205,51 @@ companies:
     max_pages: 8
     queries: ["software engineer", "full stack engineer", "machine learning engineer", "AI engineer"]
     skip_exclude_title: ['\bsenior\b', '\bsr\.?\b']   # Fidelity "Senior SWE" is mid-level; years filter still caps at 4
+
+  stripe:
+    name: Stripe
+    enabled: true
+    collector: greenhouse
+    board: stripe
+
+  pinterest:
+    name: Pinterest
+    enabled: true
+    collector: greenhouse
+    board: pinterest
+
+  airbnb:
+    name: Airbnb
+    enabled: true
+    collector: greenhouse
+    board: airbnb
+
+  block:
+    name: Block
+    enabled: true
+    collector: greenhouse
+    board: block
+
+  databricks:
+    name: Databricks
+    enabled: true
+    collector: greenhouse
+    board: databricks
+
+  scaleai:
+    name: Scale AI
+    enabled: true
+    collector: greenhouse
+    board: scaleai
+
+  okta:
+    name: Okta
+    enabled: true
+    collector: greenhouse
+    board: okta
+
+  palantir:   # ~75% of US eng roles restricted (gov/clearance): policy-watch
+    name: Palantir
+    enabled: true
+    collector: lever
+    board: palantir
