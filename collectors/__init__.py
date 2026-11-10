@@ -1,3 +1,4 @@
+from collectors.avature import AvatureCollector
 from collectors.amazon import AmazonCollector
 from collectors.apple import AppleCollector
 from collectors.ashby import AshbyCollector
@@ -11,6 +12,7 @@ from collectors.oracle import OracleCollector
 from collectors.workday import WorkdayCollector
 
 REGISTRY = {
+    "avature": AvatureCollector,
     "amazon": AmazonCollector,
     "apple": AppleCollector,
     "ashby": AshbyCollector,
