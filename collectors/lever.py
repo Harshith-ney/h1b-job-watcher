@@ -17,7 +17,13 @@ class LeverCollector(Collector):
                 location=((j.get("categories") or {}).get("location") or "").strip(),
                 url=j["hostedUrl"],
                 posted_at=datetime.fromtimestamp(created / 1000, timezone.utc).date().isoformat() if created else None,
-                description=j.get("descriptionPlain") or "",
+                description=lever_text(j),
                 external_id=j.get("id"),
             ))
         return out
+
+def lever_text(j: dict) -> str:
+    """Requirements lists first (years, clearance, citizenship live there), then description, then closing text."""
+    from models import html_to_text
+    lists = "\n".join(f"{l.get('text', '')}\n{html_to_text(l.get('content', ''))}" for l in (j.get("lists") or []))
+    return "\n".join(x for x in (lists, j.get("descriptionPlain") or "", j.get("additionalPlain") or "") if x.strip())
