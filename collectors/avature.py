@@ -16,6 +16,7 @@ from collectors.base import Collector
 from models import Job, html_to_text
 
 _LINK = re.compile(r'<a[^>]+href="(https?://[^"]+/JobDetail/[^"]+?/(\d+))"[^>]*>\s*(.*?)\s*</a>', re.S)
+_BUTTONS = {"apply", "apply now", "save", "learn more", "view job"}
 _LOC = re.compile(r'<span[^>]*class="[^"]*list-item-location[^"]*"[^>]*>\s*(.*?)\s*</span>', re.S)
 
 
@@ -26,8 +27,9 @@ def parse_results(page_html: str) -> list[tuple[str, str, str, str]]:
         end = links[i + 1].start() if i + 1 < len(links) else m.end() + 2000
         loc = _LOC.search(page_html, m.end(), end)
         title = _html.unescape(re.sub(r"<[^>]+>", "", m.group(3))).strip()
-        if title:
-            out.append((m.group(2), title, _html.unescape(loc.group(1)).strip() if loc else "", m.group(1)))
+        if not title or title.lower() in _BUTTONS or any(o[0] == m.group(2) for o in out):
+            continue  # skip "Apply"/"Save" buttons that link to the same job
+        out.append((m.group(2), title, _html.unescape(loc.group(1)).strip() if loc else "", m.group(1)))
     return out
 
 
