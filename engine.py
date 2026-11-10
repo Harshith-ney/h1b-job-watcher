@@ -181,7 +181,7 @@ def run_all(companies: dict, build_collector, store, notifier, filters: dict, se
     _send_health(to_warn, recovered, store, notifier)
     if hasattr(store, "record_run"):
         store.record_run(len(companies), totals["failed"], totals["found"], totals["matched"], totals["alerts"])
-        _maybe_heartbeat(store, notifier, settings, len(companies))
+        _maybe_heartbeat(store, notifier, settings, len(companies), active=set(companies))
     return summary
 
 
@@ -209,7 +209,7 @@ def _send_health(to_warn, recovered, store, notifier):
                         f"{'is' if len(recovered) == 1 else 'are'} working again.", "health")
 
 
-def _maybe_heartbeat(store, notifier, settings, n_companies, now=None):
+def _maybe_heartbeat(store, notifier, settings, n_companies, now=None, active=None):
     """Once a day (first run at/after heartbeat_hour_utc), post a 24h summary to #health."""
     now = now or datetime.now(timezone.utc)
     hour = settings.get("heartbeat_hour_utc")  # e.g. 13 UTC = 9 AM Eastern; unset = heartbeat off
@@ -221,6 +221,8 @@ def _maybe_heartbeat(store, notifier, settings, n_companies, now=None):
         return
     since = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
     st = store.stats_since(since)
+    if active is not None:  # ignore disabled companies (e.g. Salesforce) with stale failure records
+        st["failing"] = [k for k in st["failing"] if k in active]
     status = "✅ ALIVE" if not st["failing"] else "🟠 ALIVE (some collectors failing)"
     msg = (f"{status}: last 24h\n\n"
            f"Scans: {st['runs']} (expected ~24) · Companies: {n_companies}\n"
