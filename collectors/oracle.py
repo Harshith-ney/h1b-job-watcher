@@ -46,6 +46,8 @@ class OracleCollector(Collector):
             for page in range(self.max_pages):
                 finder = (f'findReqs;siteNumber={site},keyword="{q}",'
                           f'sortBy=POSTING_DATES_DESC,limit={limit},offset={page * limit}')
+                if self.cfg.get("finder_extra"):  # e.g. locationId=... to search one country only
+                    finder += "," + self.cfg["finder_extra"]
                 params = {"onlyData": "true", "expand": "requisitionList.secondaryLocations",
                           "finder": finder}
                 data = self.http.get(f"{self.base}/recruitingCEJobRequisitions?{_qs(params)}").json()

@@ -274,3 +274,14 @@ companies:
     enabled: true
     collector: lever
     board: palantir
+
+  dell:
+    name: Dell
+    enabled: true
+    collector: oracle
+    host: enterpriseplatform.dell.com
+    site: careers
+    finder_extra: "locationId=300000000471434"   # United States only
+    max_pages: 4
+    queries: ["software engineer", "software development engineer", "machine learning engineer", "AI engineer"]
+    skip_exclude_title: ['\bsenior\b', '\bsr\.?\b']   # Dell 'Software Senior Engineer'; years filter caps at 4
