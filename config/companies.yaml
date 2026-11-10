@@ -187,6 +187,7 @@ companies:
     # copied from the filtered search URL: NY/Seattle/DC · Early Careers + Experienced · Engineering and CTO + Product
     search_params: "1845=%5B162508%2C162485%2C162522%5D&1845_format=3996&1686=%5B55478%2C57029%5D&1686_format=2312&2562=%5B219290%2C219309%5D&2562_format=6594&listFilterMode=1&jobRecordsPerPage=12"
     max_pages: 8                 # ~55 jobs = 5 pages of 12; read all every run
+    skip_exclude_title: ['\bsenior\b', '\bsr\.?\b']   # Bloomberg Senior SWE often 3-5 yrs; years filter caps at 4
     extra_exclude_title: ['\(cw\)', '\bcontract(or)?\b']   # contract-worker roles: agency hires, no sponsorship
 
   ibm:           {name: IBM,            enabled: false, collector: null}
