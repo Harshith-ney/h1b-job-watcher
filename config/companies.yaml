@@ -149,7 +149,17 @@ companies:
     skip_exclude_title: ['\b(iii|iv|v)\b']   # Google SWE III = ~2 yrs (L4); still filtered by years
     extra_exclude_title: ['\b(iv|v)\b']
 
-  meta:          {name: Meta,           enabled: false, collector: null}   # GraphQL
+  meta:
+    name: Meta
+    enabled: true
+    priority: high
+    collector: meta
+    teams: ["Software Engineering", "Artificial Intelligence"]
+    doc_id: "27129360303422352"    # Meta's saved GraphQL query; if it rotates, a health warning fires
+    extra_exclude_title: ['technical leadership']   # Meta's senior-IC postings
+    experience:
+      unknown_years: keep          # search results carry no description; keep unless the job page says otherwise
+
   uber:
     name: Uber
     enabled: true

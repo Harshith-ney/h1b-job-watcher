@@ -1,3 +1,4 @@
+from collectors.meta import MetaCollector
 from collectors.avature import AvatureCollector
 from collectors.amazon import AmazonCollector
 from collectors.apple import AppleCollector
@@ -12,6 +13,7 @@ from collectors.oracle import OracleCollector
 from collectors.workday import WorkdayCollector
 
 REGISTRY = {
+    "meta": MetaCollector,
     "avature": AvatureCollector,
     "amazon": AmazonCollector,
     "apple": AppleCollector,
