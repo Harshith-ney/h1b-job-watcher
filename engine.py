@@ -212,7 +212,10 @@ def _send_health(to_warn, recovered, store, notifier):
 def _maybe_heartbeat(store, notifier, settings, n_companies, now=None):
     """Once a day (first run at/after heartbeat_hour_utc), post a 24h summary to #health."""
     now = now or datetime.now(timezone.utc)
-    hour = int(settings.get("heartbeat_hour_utc", 13))  # 13 UTC = 9 AM Eastern
+    hour = settings.get("heartbeat_hour_utc")  # e.g. 13 UTC = 9 AM Eastern; unset = heartbeat off
+    if hour is None:
+        return
+    hour = int(hour)
     today = now.strftime("%Y-%m-%d")
     if now.hour < hour or store.get_meta("last_heartbeat") == today:
         return
