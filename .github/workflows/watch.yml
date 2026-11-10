@@ -39,6 +39,8 @@ jobs:
       - name: Scan
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_NEWGRAD: ${{ secrets.DISCORD_WEBHOOK_NEWGRAD }}
+          DISCORD_WEBHOOK_HEALTH: ${{ secrets.DISCORD_WEBHOOK_HEALTH }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
         run: python main.py run
 

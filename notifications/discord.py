@@ -1,4 +1,10 @@
-"""Discord webhook sender with 429 handling and message chunking."""
+"""Discord webhook sender: routing to channels, 429 handling, message chunking.
+
+Channels (env vars; each falls back to DISCORD_WEBHOOK_URL when unset):
+  jobs    -> DISCORD_WEBHOOK_URL        regular new-job alerts and digests
+  newgrad -> DISCORD_WEBHOOK_NEWGRAD    early-career (🎓) alerts
+  health  -> DISCORD_WEBHOOK_HEALTH     collector warnings/recoveries + daily heartbeat
+"""
 from __future__ import annotations
 
 import logging
@@ -11,13 +17,19 @@ from models import Job
 
 log = logging.getLogger("discord")
 LIMIT = 1900
+CHANNEL_ENV = {"jobs": "DISCORD_WEBHOOK_URL", "newgrad": "DISCORD_WEBHOOK_NEWGRAD", "health": "DISCORD_WEBHOOK_HEALTH"}
+SPONSORSHIP_LINE = {
+    "green": "🟢 Posting says visa sponsorship is available",
+    "yellow": "🟡 Sponsorship not stated: check the posting",
+    "red": "🔴 Posting mentions a sponsorship/citizenship restriction: verify",
+}
 
 
 def format_job(job: Job, early: bool, sponsorship: str) -> str:
     header = "🎓 NEW GRAD JOB" if early else "🚨 NEW JOB"
     msg = f"{header}\n\n{job.company}\n{job.title}\n{job.location or 'Location not listed'}\n\n{job.url}"
-    if sponsorship == "red":
-        msg += "\n\n⚠️ Posting mentions a sponsorship/citizenship restriction — verify"
+    if sponsorship in SPONSORSHIP_LINE:
+        msg += f"\n\n{SPONSORSHIP_LINE[sponsorship]}"
     return msg
 
 
@@ -36,18 +48,20 @@ def format_digest(company: str, jobs: list[Job], title: str) -> list[str]:
 
 class Discord:
     def __init__(self, webhook: str | None = None, dry_run: bool = False):
-        self.webhook = webhook or os.getenv("DISCORD_WEBHOOK_URL")
+        default = webhook or os.getenv("DISCORD_WEBHOOK_URL")
+        self.webhooks = {ch: (os.getenv(env) or default) for ch, env in CHANNEL_ENV.items()}
+        self.webhooks["jobs"] = default
         self.dry_run = dry_run
-        if not self.webhook and not dry_run:
+        if not default and not dry_run:
             raise RuntimeError("DISCORD_WEBHOOK_URL is not set (use --dry-run to test without it)")
 
-    def send(self, content: str) -> bool:
+    def send(self, content: str, channel: str = "jobs") -> bool:
         if self.dry_run:
-            print("\n----- DISCORD (dry run) -----\n" + content)
+            print(f"\n----- DISCORD #{channel} (dry run) -----\n" + content)
             return True
+        url = self.webhooks.get(channel) or self.webhooks["jobs"]
         for _ in range(5):
-            r = requests.post(self.webhook, json={"content": content[:2000], "allowed_mentions": {"parse": []}},
-                              timeout=15)
+            r = requests.post(url, json={"content": content[:2000], "allowed_mentions": {"parse": []}}, timeout=15)
             if r.status_code == 429:
                 time.sleep(float(r.json().get("retry_after", 2)) + 0.25)
                 continue

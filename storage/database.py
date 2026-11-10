@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 CREATE INDEX IF NOT EXISTS idx_jobs_company ON jobs(company_key);
 
+CREATE TABLE IF NOT EXISTS runs (
+    ts        TEXT NOT NULL,
+    companies INTEGER, failed INTEGER, found INTEGER, matched INTEGER, alerts INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+
 CREATE TABLE IF NOT EXISTS collector_health (
     company_key           TEXT PRIMARY KEY,
     last_successful_scan  TEXT,
@@ -127,3 +134,25 @@ class Store:
     def set_warned(self, key: str) -> None:
         self.db.execute("UPDATE collector_health SET warned=1 WHERE company_key=?", (key,))
         self.db.commit()
+
+    # ---- runs / heartbeat --------------------------------------------------
+    def record_run(self, companies: int, failed: int, found: int, matched: int, alerts: int) -> None:
+        self.db.execute("INSERT INTO runs VALUES (?,?,?,?,?,?)", (now(), companies, failed, found, matched, alerts))
+        self.db.commit()
+
+    def get_meta(self, key: str) -> str | None:
+        row = self.db.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
+        return row["value"] if row else None
+
+    def set_meta(self, key: str, value: str) -> None:
+        self.db.execute("INSERT INTO meta VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (key, value))
+        self.db.commit()
+
+    def stats_since(self, since: str) -> dict:
+        r = self.db.execute("""SELECT COUNT(*) n, COALESCE(SUM(failed),0) failed, COALESCE(SUM(alerts),0) alerts,
+                                      COALESCE(SUM(matched),0) matched FROM runs WHERE ts >= ?""", (since,)).fetchone()
+        new_jobs = self.db.execute("SELECT COUNT(*) FROM jobs WHERE first_seen >= ?", (since,)).fetchone()[0]
+        failing = [row["company_key"] for row in
+                   self.db.execute("SELECT company_key FROM collector_health WHERE consecutive_failures > 0")]
+        return {"runs": r["n"], "failed": r["failed"], "alerts": r["alerts"], "matched": r["matched"],
+                "new_jobs": new_jobs, "failing": failing}

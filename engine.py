@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 
 from filters.experience import experience_verdict
 from filters.roles import is_us_location, title_verdict
@@ -12,6 +13,14 @@ from models import Job
 from notifications.discord import format_digest, format_job
 
 log = logging.getLogger("engine")
+
+
+def _send(notifier, msg: str, channel: str = "jobs") -> bool:
+    """Route to a Discord channel; works with simple notifiers that only take a message."""
+    try:
+        return notifier.send(msg, channel=channel)
+    except TypeError:
+        return notifier.send(msg)
 
 
 @dataclass
@@ -87,15 +96,15 @@ def process_company(cfg: dict, collector, store, notifier, filters: dict, settin
             store.save(key, job, "seeded", "first scan", early, sp, fp=fp)
         if settings.get("bootstrap", "digest") == "digest":
             for chunk in format_digest(company, [m[1] for m in matched], "📋 NOW WATCHING — currently open"):
-                notifier.send(chunk)
+                _send(notifier, chunk, "jobs")
         return res
 
     cap = int(settings.get("max_alerts_per_company", 15))
     if len(matched) > cap:  # probably a site change that shifted fingerprints; don't spam the phone
         for fp, job, early, sp in matched:
             store.save(key, job, "pending", "", early, sp, fp=fp)
-        ok = all(notifier.send(c) for c in format_digest(company, [m[1] for m in matched],
-                                                          "🚨 NEW JOBS (bulk — check collector if unexpected)"))
+        ok = all(_send(notifier, c, "jobs") for c in format_digest(company, [m[1] for m in matched],
+                                                                    "🚨 NEW JOBS (bulk — check collector if unexpected)"))
         if ok:
             for fp, *_ in matched:
                 store.mark(fp, "notified")
@@ -104,7 +113,7 @@ def process_company(cfg: dict, collector, store, notifier, filters: dict, settin
 
     for fp, job, early, sp in matched:
         store.save(key, job, "pending", "", early, sp, fp=fp)
-        if notifier.send(format_job(job, early, sp)):
+        if _send(notifier, format_job(job, early, sp), "newgrad" if early else "jobs"):
             store.mark(fp, "notified")
             res.alerts_sent += 1
     return res
@@ -135,6 +144,7 @@ _PLATFORMS = {"workday": "Workday", "eightfold": "Eightfold", "oracle": "Oracle 
 def run_all(companies: dict, build_collector, store, notifier, filters: dict, settings: dict) -> dict:
     threshold = int(settings.get("failure_alert_threshold", 3))
     summary, to_warn, recovered = {}, [], []
+    totals = {"failed": 0, "found": 0, "matched": 0, "alerts": 0}
     for key, cfg in companies.items():
         try:
             collector = build_collector(cfg)
@@ -143,15 +153,20 @@ def run_all(companies: dict, build_collector, store, notifier, filters: dict, se
             log.exception("%s: collector failed", key)
             h = store.record_failure(key, describe_error(e))
             summary[key] = f"FAILED ({h['consecutive_failures']}x): {e}"
+            totals["failed"] += 1
             if h["consecutive_failures"] >= threshold and not h.get("warned"):
                 to_warn.append((cfg, h))
             continue
 
+        totals["found"] += res.found
+        totals["matched"] += len(res.matched)
+        totals["alerts"] += res.alerts_sent
         prev = store.health(key)
         if res.found == 0 and (prev.get("jobs_found") or 0) > 0:
             # Returning nothing when we used to get results usually means the site changed.
             h = store.record_failure(key, f"returned 0 jobs (previously {prev['jobs_found']})")
             summary[key] = "SUSPICIOUS: 0 jobs"
+            totals["failed"] += 1
             if h["consecutive_failures"] >= threshold and not h.get("warned"):
                 to_warn.append((cfg, h))
             continue
@@ -164,6 +179,9 @@ def run_all(companies: dict, build_collector, store, notifier, filters: dict, se
         log.info("%s: %s", key, summary[key])
 
     _send_health(to_warn, recovered, store, notifier)
+    if hasattr(store, "record_run"):
+        store.record_run(len(companies), totals["failed"], totals["found"], totals["matched"], totals["alerts"])
+        _maybe_heartbeat(store, notifier, settings, len(companies))
     return summary
 
 
@@ -183,9 +201,30 @@ def _send_health(to_warn, recovered, store, notifier):
             lines.append(f"• {platform}: {names}\n  {reason}\n  failing {runs} runs · last OK {last_ok} UTC")
         if len(to_warn) > 1 and len(groups) == 1:
             lines.append("\nSame platform, same error: usually a temporary outage on their side.")
-        if notifier.send("\n".join(lines)):
+        if _send(notifier, "\n".join(lines), "health"):
             for cfg, _ in to_warn:
                 store.set_warned(cfg["key"])
     if recovered:
-        notifier.send(f"✅ COLLECTOR RECOVERED\n\n{', '.join(recovered)} "
-                      f"{'is' if len(recovered) == 1 else 'are'} working again.")
+        _send(notifier, f"✅ COLLECTOR RECOVERED\n\n{', '.join(recovered)} "
+                        f"{'is' if len(recovered) == 1 else 'are'} working again.", "health")
+
+
+def _maybe_heartbeat(store, notifier, settings, n_companies, now=None):
+    """Once a day (first run at/after heartbeat_hour_utc), post a 24h summary to #health."""
+    now = now or datetime.now(timezone.utc)
+    hour = int(settings.get("heartbeat_hour_utc", 13))  # 13 UTC = 9 AM Eastern
+    today = now.strftime("%Y-%m-%d")
+    if now.hour < hour or store.get_meta("last_heartbeat") == today:
+        return
+    since = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    st = store.stats_since(since)
+    status = "✅ ALIVE" if not st["failing"] else "🟠 ALIVE (some collectors failing)"
+    msg = (f"{status}: last 24h\n\n"
+           f"Scans: {st['runs']} (expected ~24) · Companies: {n_companies}\n"
+           f"New jobs seen: {st['new_jobs']} · Matched: {st['matched']} · Alerts sent: {st['alerts']}\n"
+           f"Collector failures: {st['failed']}"
+           + (f"\nCurrently failing: {', '.join(st['failing'])}" if st["failing"] else ""))
+    if st["runs"] < 18:
+        msg += "\n\n⚠️ Fewer scans than expected: check cron-job.org history."
+    if _send(notifier, msg, "health"):
+        store.set_meta("last_heartbeat", today)

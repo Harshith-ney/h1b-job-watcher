@@ -109,6 +109,7 @@ sponsorship:
     - 'not be able to (employ|hire)(?:u\.s\.|[^.]){0,200}(visa|h-?1b|sponsor)'
     - '(not|unable to|cannot|can.t)(?:u\.s\.|[^.]){0,120}support(?:u\.s\.|[^.]){0,40}sponsorship'
     - 'not (be )?(eligible|able) [^.]{0,40}(opt|cpt|f-?1)'
+    - 'ts/sci|polygraph|public trust'
   green_flags:
     - 'visa sponsorship (is )?(available|offered|provided)'
     - 'will sponsor'

@@ -1,4 +1,5 @@
 settings:
+  heartbeat_hour_utc: 13         # daily ✅ ALIVE summary (13 UTC = 9 AM ET)
   bootstrap: silent              # first successful scan of a company: digest | silent
   max_alerts_per_company: 15     # more new matches than this in one run -> one digest instead of N pings
   failure_alert_threshold: 3     # consecutive failed scans before a ⚠️ warning
