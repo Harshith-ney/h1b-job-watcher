@@ -58,3 +58,12 @@ jobs:
           git add jobs.db
           git commit -qm "state $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" state
+
+      - name: Alert on failure
+        if: failure()
+        env:
+          HOOK: ${{ secrets.DISCORD_WEBHOOK_HEALTH || secrets.DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 -c 'import json, os; print(json.dumps({"content": "❌ WATCHER RUN FAILED\nA step failed (tests, setup or scan), so no jobs were checked this run.\n" + os.environ["RUN_URL"]}))' > /tmp/msg.json
+          curl -s -o /dev/null -w "discord: %{http_code}\n" -H "Content-Type: application/json" -d @/tmp/msg.json "$HOOK"
